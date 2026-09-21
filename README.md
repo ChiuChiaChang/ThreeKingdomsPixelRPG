@@ -1,8 +1,8 @@
-# ThreeKingdomsPixelRPG — FC RPG Edition
+# ThreeKingdomsPixelRPG — Final Edition
 
-Version **2.0.0.0** is a major rewrite into an original 8-bit/Famicom-era Three Kingdoms RPG inspired by the design language of classic console RPGs. It does **not** include copied sprites, maps, music, code, or other assets from commercial games.
+**Version 3.0.0.0** is the consolidated complete browser game edition: an original Famicom-era Three Kingdoms RPG with no copied commercial game assets.
 
-## Run
+## One-command play
 ```bash
 git clone https://github.com/ChiuChiaChang/ThreeKingdomsPixelRPG.git
 cd ThreeKingdomsPixelRPG
@@ -10,23 +10,30 @@ npm install
 npm start
 ```
 
+## Complete gameplay
+- Original FC/8-bit title, world, town, battle and ending screens
+- 8 story chapters: 桃園起兵 → 黃巾平定 → 虎牢雄關 → 臥龍出山 → 赤壁烈火 → 漢中爭鋒 → 北伐中原 → 天下歸一
+- Tile world maps with collision, terrain, castles and random encounters
+- Town/inn/shop/recruitment/chapter-boss loop
+- Liu Bei, Guan Yu, Zhang Fei, Zhao Yun and Zhuge Liang party progression
+- Five-position turn battle presentation and chapter bosses
+- Attack, fire strategy, recovery strategy, all-out attack, items and retreat
+- HP/troop strength, SP, gold, provisions, items, EXP, levels and stat growth
+- Recruitment progression
+- Local save/load using browser localStorage
+- Auto-save after chapter bosses
+- Pause/army status screen
+- Keyboard and mouse controls
+- Lightweight original square-wave 8-bit sound effects using Web Audio
+- Final ending after Chapter 8
+- Responsive desktop/mobile layout
+
 ## Controls
-- Arrow keys / WASD: move on world map
-- Enter / Space: confirm
-- Battle menu: Arrow Up/Down + Enter, or mouse
+- Arrow keys / WASD — move
+- Enter / Space — confirm
+- M — army/menu
+- S — save
+- Escape — leave army menu
 
-## v2.0.0.0
-- FC-style title screen
-- 16×12 tile world map
-- Player movement and collision
-- Town/castle, forest, mountain and water tiles
-- Random encounters
-- Original 8-bit CSS warrior sprites
-- Five-member party
-- 5 vs 5 battle screen
-- Attack / strategy / defense / all-out attack / retreat commands
-- SP, gold and provisions
-- Enemy turns, victory rewards and return to world map
-- Keyboard and mouse support
-
-Next milestones: towns/interiors, NPC dialogue trees, recruitment, equipment/items, EXP/levels, save/load, chapter/story system, boss battles, sprite sheets and original chiptune audio.
+## Design note
+This project intentionally uses original CSS pixel graphics, maps, UI implementation and generated sound effects. It evokes the broad 8-bit console RPG era without distributing copyrighted sprites, maps, music, source code or other assets from commercial games.
