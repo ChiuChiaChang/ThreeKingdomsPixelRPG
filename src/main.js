@@ -1,14 +1,32 @@
-const N=["關羽","張苞","周瑜","趙雲","姜維"],E=["司馬懿","司馬炎","鄧艾","鍾會","徐晃"];
-const C={關羽:"#3d9b68",張苞:"#9a4735",周瑜:"#7250aa",趙雲:"#5d86b8",姜維:"#3f9c88",司馬懿:"#57329b",司馬炎:"#8b3152",鄧艾:"#75543c",鍾會:"#8d503e",徐晃:"#a74432"};
-const make=(name,hp,side,i)=>({name,hp,max:hp,side,i,dead:false});let allies=N.map((n,i)=>make(n,[9999,9999,9558,9600,9800][i],"ally",i)),foes=E.map((n,i)=>make(n,[28000,26000,24000,24000,24000][i],"enemy",i));
-let sp=247,selected=1,busy=false,msg="選擇指令開始戰鬥",fx=null,round=1;
-const skills=[["攻擊",0,900,"slash"],["落雷計",28,1900,"thunder"],["火焰計",24,1650,"fire"],["聖雨",34,-1800,"heal"],["金仙計",45,-2600,"heal"],["陣型",18,1250,"aura"],["謀略",30,2100,"magic"]];
-function alive(a){return a.filter(x=>!x.dead)}
-function pixel(u){return `<div class="pixel-wrap ${u.side}"><div class="pixel-char" style="--c:${C[u.name]}"><i class="plume"></i><i class="head"></i><i class="body"></i><i class="arm"></i><i class="weapon"></i><i class="leg l"></i><i class="leg r"></i></div></div>`}
-function card(u){let p=Math.max(0,u.hp/u.max*100);return `<div class="fighter ${u.side} ${u.dead?"dead":""}" data-name="${u.name}"><div class="stat"><strong>${u.name}</strong><em>${Math.max(0,u.hp)}</em><div class="hp"><span style="width:${p}%"></span></div></div>${pixel(u)}</div>`}
-function render(){let a=allies[selected];document.querySelector("#app").innerHTML=`<main><div class="top"><span>蜀漢軍</span><b>三國像素戰記</b><span>魏軍</span></div><div class="stage"><div class="moon"></div><div class="army">${allies.map(card).join("")}</div><div class="vs">VS<br><small>ROUND ${round}</small></div><div class="army">${foes.map(card).join("")}</div><div id="fx" class="${fx||""}"></div></div><div class="hud"><div class="portrait"><div class="bigpixel">${pixel(a)}</div><b>${a.name}</b><small>LV. 28　HP ${Math.max(0,a.hp)}</small></div><div class="menu"><div class="message">SP <b>${sp}</b>　│　${msg}</div><div class="grid">${skills.map((s,i)=>`<button data-s="${i}" ${busy?"disabled":""}><i>▶</i>${s[0]}<small>SP ${s[1]}</small></button>`).join("")}</div></div></div><footer>v1.1.0.0 · Original CSS Pixel Art · Click a hero to change commander</footer></main>`;
-document.querySelectorAll("button").forEach(x=>x.onclick=()=>act(+x.dataset.s));document.querySelectorAll(".fighter.ally").forEach((x,i)=>x.onclick=()=>{if(!allies[i].dead){selected=i;msg=`${allies[i].name} 準備出戰`;render()}})}
-function effect(type,target){fx=type;render();setTimeout(()=>{fx=null;render()},480);let el=document.querySelector(`[data-name="${target.name}"]`);if(el)el.classList.add(type==="heal"?"healed":"hit")}
-function act(i){if(busy)return;let [name,cost,power,type]=skills[i],actor=allies[selected];if(actor.dead){msg="此武將已無法戰鬥";render();return}if(sp<cost){msg="SP 不足！";render();return}sp-=cost;busy=true;if(power<0){let t=alive(allies).sort((a,b)=>a.hp/a.max-b.hp/b.max)[0];let n=Math.min(-power,t.max-t.hp);t.hp+=n;msg=`${actor.name}施展${name}，${t.name}恢復 ${n} HP`;effect("heal",t)}else{let es=alive(foes),t=es[Math.floor(Math.random()*es.length)],d=Math.floor(power*.78+Math.random()*power*.44);t.hp-=d;if(t.hp<=0){t.hp=0;t.dead=true}msg=`${actor.name}施展${name}！ ${t.name} -${d}`;effect(type,t)}setTimeout(()=>{if(!alive(foes).length){msg="大勝！魏軍全滅！";busy=false;render();return}enemyTurn()},700)}
-function enemyTurn(){let es=alive(foes),as=alive(allies),e=es[Math.floor(Math.random()*es.length)],t=as[Math.floor(Math.random()*as.length)],d=Math.floor(500+Math.random()*750);t.hp-=d;if(t.hp<=0){t.hp=0;t.dead=true;if(t===allies[selected]){let ni=allies.findIndex(x=>!x.dead);if(ni>=0)selected=ni}}msg=`${e.name}反擊！ ${t.name} -${d}`;round++;effect("enemyfx",t);setTimeout(()=>{busy=false;if(!alive(allies).length)msg="全軍覆沒… 點重新整理再戰";render()},500)}
-render();
+const $=s=>document.querySelector(s), app=$("#app");
+const heroNames=["劉備","關羽","張飛","趙雲","諸葛亮"], enemyNames=["黃巾將","黃巾兵","黃巾兵","黃巾兵","黃巾兵"];
+let state={scene:"title",x:7,y:6,gold:120,food:500,sp:36,msg:"",turn:1,menu:0};
+let party=heroNames.map((name,i)=>({name,hp:[420,560,590,520,350][i],max:[420,560,590,520,350][i],lv:[5,7,7,6,8][i]}));
+let enemies=[];
+const map=[
+"################",
+"#....tt....C...#",
+"#..~~~~........#",
+"#..~~~~..tt....#",
+"#..............#",
+"#...tt.........#",
+"#......@.......#",
+"#..........C...#",
+"#..^^^^........#",
+"#..^^^^...tt...#",
+"#..............#",
+"################"];
+const tiles={"#":"tree",".":"grass","~":"water","^":"mount","C":"castle","t":"woods","@":"grass"};
+function resetEnemies(){enemies=enemyNames.map((name,i)=>({name,hp:i?180:480,max:i?180:480,dead:false}))}
+function px(name,enemy=false){let colors=enemy?["#bc3b35","#6b2525"]:name==="劉備"?["#d9c34c","#6a9a48"]:name==="關羽"?["#d33b35","#3e995a"]:name==="張飛"?["#7a4ca5","#b34b3f"]:name==="趙雲"?["#d7d7d7","#557fa8"]:["#efefdf","#5e62a9"];return `<div class="sprite ${enemy?"bad":""}" style="--a:${colors[0]};--b:${colors[1]}"><i class="hair"></i><i class="face"></i><i class="body"></i><i class="hand"></i><i class="sword"></i><i class="foot f1"></i><i class="foot f2"></i></div>`}
+function frame(inner,cls=""){app.innerHTML=`<div class="console"><div class="screen ${cls}">${inner}</div><div class="brand">THREE KINGDOMS · 8-BIT RPG <small>v2.0.0.0</small></div></div>`}
+function title(){frame(`<div class="title"><div class="sun"></div><h1>三國志<br><span>群雄傳</span></h1><p>THREE KINGDOMS<br>PIXEL RPG</p><button id="start">▶ 開始遊戲</button><small>方向鍵 / WASD 移動　Enter / Space 確認</small></div>`,"titlebg");$("#start").onclick=()=>{state.scene="world";world()}}
+function world(){let html=map.map((row,y)=>[...row].map((c,x)=>`<i class="tile ${tiles[c]}" data-x="${x}" data-y="${y}"></i>`).join("")).join("");frame(`<div class="world"><div class="map">${html}<div class="player" style="left:${state.x*32}px;top:${state.y*32}px">${px("劉備")}</div></div><div class="sidebox"><b>幽州</b><hr>金　${state.gold}<br>糧　${state.food}<br>SP　${state.sp}<hr>劉備軍<br><small>尋訪義士<br>討伐黃巾</small></div><div class="dialog">▲ 涿郡附近<br>百姓：黃巾賊四處作亂，請將軍小心！</div></div>`,"game");}
+function walk(dx,dy){if(state.scene!=="world")return;let nx=state.x+dx,ny=state.y+dy,c=map[ny]?.[nx];if(!c||c==="#"||c==="~"||c==="^")return;state.x=nx;state.y=ny;world();if(Math.random()<.18)setTimeout(battle,120)}
+function battle(){state.scene="battle";resetEnemies();state.msg="黃巾賊出現了！";battleView()}
+function row(u,enemy=false,i=0){let pct=Math.max(0,u.hp/u.max*100);return `<div class="warrior ${enemy?"enemy":""} ${u.dead?"dead":""}">${enemy?"":px(u.name)}<div class="stats"><b>${u.name}</b><span>${Math.max(0,u.hp)}</span><em><i style="width:${pct}%"></i></em></div>${enemy?px(u.name,true):""}</div>`}
+function battleView(){frame(`<div class="battle"><div class="sky">黃巾之亂　　第 ${state.turn} 回合</div><div class="teams"><div>${party.map((u,i)=>row(u,false,i)).join("")}</div><div class="versus">⚔</div><div>${enemies.map((u,i)=>row(u,true,i)).join("")}</div></div><div class="battleui"><div class="face">${px(party[0].name)}<b>${party[0].name}</b></div><div class="commands"><div class="msg">${state.msg}</div>${["攻擊","策略","防禦","總攻擊","撤退"].map((x,i)=>`<button data-c="${i}">${i===state.menu?"▶":"　"} ${x}</button>`).join("")}</div><div class="res">SP ${state.sp}<br>金 ${state.gold}<br>糧 ${state.food}</div></div></div>`,"game");document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>command(+b.dataset.c))}
+function living(a){return a.filter(x=>!x.dead)}
+function command(i){if(i===4){state.scene="world";state.msg="";world();return}if(i===1&&state.sp<5){state.msg="策略點不足！";battleView();return}let es=living(enemies);if(!es.length)return;let t=es[Math.floor(Math.random()*es.length)],d=i===1?(state.sp-=5,Math.floor(120+Math.random()*100)):i===3?Math.floor(90+Math.random()*90):Math.floor(55+Math.random()*80);t.hp-=d;if(t.hp<=0){t.hp=0;t.dead=true}state.msg=`${party[0].name}${i===1?"施展火計":"發動攻擊"}！ ${t.name}損失 ${d} 兵力`;battleView();setTimeout(enemyTurn,520)}
+function enemyTurn(){if(!living(enemies).length){state.gold+=60;state.food+=100;state.msg="勝利！獲得 金60、糧100";battleView();setTimeout(()=>{state.scene="world";state.turn++;world()},1200);return}let e=living(enemies)[0],p=living(party)[Math.floor(Math.random()*living(party).length)],d=Math.floor(25+Math.random()*55);p.hp-=d;if(p.hp<=0)p.hp=1;state.msg=`${e.name}反擊！ ${p.name}損失 ${d} 兵力`;state.turn++;battleView()}
+addEventListener("keydown",e=>{if(state.scene==="title"&&(e.key==="Enter"||e.key===" ")){state.scene="world";world();return}if(state.scene==="world"){let k=e.key.toLowerCase();if(k==="arrowup"||k==="w")walk(0,-1);if(k==="arrowdown"||k==="s")walk(0,1);if(k==="arrowleft"||k==="a")walk(-1,0);if(k==="arrowright"||k==="d")walk(1,0)}else if(state.scene==="battle"){if(e.key==="ArrowUp"){state.menu=(state.menu+4)%5;battleView()}if(e.key==="ArrowDown"){state.menu=(state.menu+1)%5;battleView()}if(e.key==="Enter"||e.key===" ")command(state.menu)}});title();
