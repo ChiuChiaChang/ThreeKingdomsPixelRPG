@@ -1,0 +1,10 @@
+const heroes=[["關羽",9999,"🗡️"],["張苞",9999,"⚔️"],["周瑜",9558,"🔥"],["趙雲",9600,"🐉"],["姜維",9800,"🏹"]];
+const enemies=[["司馬懿",28000,"🔮"],["司馬炎",26000,"👑"],["鄧艾",24000,"🪓"],["鍾會",24000,"⚔️"],["徐晃",24000,"🛡️"]];
+let turn=0,sp=247,log="戰鬥開始！";
+const max={};[...heroes,...enemies].forEach(x=>max[x[0]]=x[1]);
+function unit(u,side,i){let pct=Math.max(0,u[1]/max[u[0]]*100);return `<div class="unit ${side}"><div class="info"><b>${u[0]}</b><span>${Math.max(0,u[1])}</span></div><div class="sprite">${u[2]}</div><div class="bar"><i style="width:${pct}%"></i></div></div>`}
+function render(){document.querySelector("#app").innerHTML=`<main><header>三國像素戰記 <small>v1.0.0.0</small></header><section class="battle"><div>${heroes.map((x,i)=>unit(x,"ally",i)).join("")}</div><div>${enemies.map((x,i)=>unit(x,"enemy",i)).join("")}</div></section><section class="panel"><div class="portrait">張 苞<br><span>⚔️</span></div><div class="commands"><div class="status">SP ${sp}　｜　${log}</div>${["攻擊","落雷計","火焰計","聖雨","金仙計","陣型","謀略"].map((x,i)=>`<button data-i="${i}">${x}</button>`).join("")}</div></section></main>`;document.querySelectorAll("button").forEach(b=>b.onclick=()=>act(+b.dataset.i))}
+function alive(a){return a.filter(x=>x[1]>0)}
+function act(skill){let foes=alive(enemies);if(!foes.length)return;let target=foes[Math.floor(Math.random()*foes.length)],cost=skill?20:0;if(sp<cost){log="SP 不足！";render();return}sp-=cost;let dmg=skill?Math.floor(1100+Math.random()*1400):Math.floor(600+Math.random()*700);target[1]-=dmg;log=`張苞使用${["攻擊","落雷計","火焰計","聖雨","金仙計","陣型","謀略"][skill]}，${target[0]} -${dmg}`;if(!alive(enemies).length){log="勝利！敵軍全滅！";render();return}setTimeout(enemyTurn,450);render()}
+function enemyTurn(){let e=alive(enemies),h=alive(heroes);if(!e.length||!h.length)return;let a=e[Math.floor(Math.random()*e.length)],t=h[Math.floor(Math.random()*h.length)],d=Math.floor(350+Math.random()*700);t[1]-=d;log=`${a[0]}反擊，${t[0]} -${d}`;if(!alive(heroes).length)log="敗北…";render()}
+render();
